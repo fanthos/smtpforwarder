@@ -22,14 +22,28 @@ async function processApi(data) {
 	}
 	const stringToSign = timestamp + "\n" + secret;
 	const sign = crypto.createHmac('sha256', secret).update(stringToSign).digest().toString("base64");
-	let url=`https://oapi.dingtalk.com/robot/send?access_token=${token}&timestamp=${timestamp}&sign=${sign}`
-	console.log(url, dingtalkData);
-	let ret = await axios.request({
-		url: url,
-		method: "POST",
-		data: dingtalkData,
-	});
-	console.log(ret.data);
+	let url = `https://oapi.dingtalk.com/robot/send?access_token=${token}&timestamp=${timestamp}&sign=${sign}`;
+	let error = false;
+	try {
+		let ret = await axios.request({
+			url: url,
+			method: "POST",
+			data: dingtalkData,
+		});
+		if (ret.status == 200) {
+			let errorcode = ret.data.errcode;
+			if (errorcode != 0) {
+				error = {
+					message: ret.data.errmsg
+				}
+			}
+		}
+	} catch (e) {
+		error = {
+			message: e
+		};
+	}
+	return error;
 }
 
 module.exports.process = processApi;

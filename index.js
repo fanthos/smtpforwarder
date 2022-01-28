@@ -16,7 +16,8 @@ function getHandler(handlerName) {
 		handlerMap.set(handlerName1, handler);
 		return handler;
 	} catch (e) {
-		console.info('Handler loading error: ', e);
+		return e;
+		// console.info('Handler loading error: ', e);
 	}
 }
 
@@ -34,13 +35,13 @@ async function processMessage(maildata, session) {
 	let user = session.user.username;
 	let pass = session.user.password;
 
-	let api = to.match(/.+@([^@.]+)(?:\..+)?$/)[1];2
+	let api = to.match(/.+@([^@.]+)(?:\..+)?$/)[1];
 
 	let handler = getHandler(api);
-	if (handler == null) {
-		return;
+	if (handler == null || handler.process == null) {
+		return handler;
 	}
-	await (handler.process({
+	return await (handler.process({
 		text,
 		html,
 		subject,
@@ -57,9 +58,14 @@ const server = new smtp.SMTPServer({
 		// stream.on('end', callback);
 		// console.log(session);
 		// stream.pipe(process.stdout);
-		let parsed = await parser.simpleParser(stream);
-		await processMessage(parsed, session);
-		callback()
+		let ret;
+		try {
+			let parsed = await parser.simpleParser(stream);
+			ret = await processMessage(parsed, session);
+		} catch (e) {
+			ret = e || { message: 'Error when processing message' };
+		}
+		callback(ret);
 	},
 	onAuth(auth, session, callback) {
 		callback(null, {
