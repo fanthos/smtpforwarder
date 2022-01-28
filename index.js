@@ -11,9 +11,13 @@ function getHandler(handlerName) {
 	if (handler != null) {
 		return handler;
 	}
-	handler = require("./handlers/" + handlerName1);
-	handlerMap.set(handlerName1, handler);
-	return handler;
+	try {
+		handler = require("./handlers/" + handlerName1);
+		handlerMap.set(handlerName1, handler);
+		return handler;
+	} catch (e) {
+		console.info('Handler loading error: ', e);
+	}
 }
 
 /**
@@ -32,7 +36,11 @@ async function processMessage(maildata, session) {
 
 	let api = to.match(/.+@([^@.]+)(?:\..+)?$/)[1];2
 
-	await (getHandler(api).process({
+	let handler = getHandler(api);
+	if (handler == null) {
+		return;
+	}
+	await (handler.process({
 		text,
 		html,
 		subject,
