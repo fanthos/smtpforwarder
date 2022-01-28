@@ -6,7 +6,7 @@ var turndownService = new TurndownService().remove(['script', 'style', 'title'])
 let reTokenEmail = /^([^@_]+)[@_]/
 
 async function processApi(data) {
-	let token = data.from.match(reTokenEmail)[1] + data.to.match(reTokenEmail)[1];
+	let token = (data.from.match(reTokenEmail)?.[1] ?? '') + (data.to.match(reTokenEmail)?.[1] ?? '');
 	// let token = Buffer.from(tokenb64, 'base64url').toString('hex');
 	let secret = "SEC" + data.user + data.pass; // remove sec
 	// let secret = Buffer.from(secretb64, 'base64url').toString('hex');
